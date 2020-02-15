@@ -1,0 +1,6 @@
+https:
+  port : "443"
+
+http:
+  client:
+    port : "8087"

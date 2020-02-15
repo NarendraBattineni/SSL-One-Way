@@ -1,5 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd"></mule>
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+	<http:listener-config name="HTTP_Listener-Server" doc:name="HTTP Listener config" doc:id="d72b1990-762e-4885-8dcd-c32d6c6052ad" >
+		<http:listener-connection protocol="HTTPS" host="0.0.0.0" port="${https.port}" >
+			<tls:context >
+				<tls:trust-store path="clientStore.jks" password="password" type="jks" />
+				<tls:key-store type="jks" path="serverStore.jks" alias="selfsigned" keyPassword="password" password="password" />
+			</tls:context>
+		</http:listener-connection>
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="9b5bb2db-8e11-4208-975c-597d9e609a2d" file="config.yaml" />
+	<http:listener-config name="HTTP_Listener_Client" doc:name="HTTP Listener config" doc:id="bd99cdde-5cc7-4157-907b-08681939e33b" >
+		<http:listener-connection host="0.0.0.0" port="${http.client.port}" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration-server" doc:name="HTTP Request configuration" doc:id="055b14e8-e06d-4ef6-b668-d04bb3b2cbad" >
+		<http:request-connection protocol="HTTPS" host="localhost" port="${https.port}" >
+			<tls:context >
+				<tls:trust-store path="serverStore.jks" password="password" type="jks" insecure="true"/>
+				<tls:key-store type="jks" path="clientStore.jks" alias="selfsigned" keyPassword="password" password="password" />
+			</tls:context>
+		</http:request-connection>
+	</http:request-config>
+	<flow name="ServerFlow" doc:id="612dea0e-c025-476e-aa9c-04efd7b82741" >
+		<http:listener doc:name="Listener" doc:id="c7d377ee-1aa6-4325-b2e3-1e96c9cb5e70" config-ref="HTTP_Listener-Server" path="/server"/>
+		<set-payload value="Request reveived..." doc:name="Set Payload" doc:id="cbe5cbc6-92db-44dc-9ccc-062615055dc7" />
+	</flow>
+	<flow name="Client-Flow" doc:id="d1600358-6ddf-4bc8-b974-97d9f9b996db" >
+		<http:listener doc:name="Listener" doc:id="574b9743-4960-4b3f-bce8-5ca81fc3ec25" config-ref="HTTP_Listener_Client" path="/client"/>
+		<logger level="INFO" doc:name="Logger" doc:id="e9a39181-224f-4bec-b91c-5f022db118f3" message="Client Flow started..........."/>
+		<http:request method="GET" doc:name="Request" doc:id="ac8be804-25c9-4d27-a236-ff4a6f3a3255" config-ref="HTTP_Request_configuration-server" path="/server"/>
+		<set-payload value="#[payload]" doc:name="Set Payload" doc:id="7b610d6d-4e4b-484d-b840-dc7c5a401e50" />
+	</flow>
+</mule>
